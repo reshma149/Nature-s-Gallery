@@ -1,0 +1,250 @@
+if(typeof jQuery !='undefined')$ = jQuery ;
+var is_mobile = false;
+var myUserAgent = navigator.userAgent;
+if(myUserAgent.indexOf('Android')>0 || myUserAgent.indexOf('webOS')>0 || myUserAgent.indexOf('iPhone')>0 || myUserAgent.indexOf('iPad')>0 || myUserAgent.indexOf('iPod')>0 || myUserAgent.indexOf('BlackBerry')>0 || myUserAgent.indexOf('IEMobile')>0 || myUserAgent.indexOf('Opera Mini')>0){
+  $('.share-whatsapp').show();
+  is_mobile = true;
+}
+/*if(typeof(is_mobile) !='undefined' && is_mobile){
+   $('.dropdown-menu').removeClass('new-tt-menu').removeClass('new-tt-menu-inner');  
+}*/
+if(typeof(is_mobile) !='undefined' && is_mobile){
+      if($(".mob_keyboard").length>0){
+            $(".mob_keyboard").on("focus",function(){
+              var screenHeight = $(window).height();
+              var newScreenHeight = screenHeight*0.3 ;
+                //$("#formpage_container").height($("body").innerHeight());
+                //$("#formpage_container").css("overflow-y","scroll");
+                $(".formpage_container").css('padding-bottom',newScreenHeight);
+            });
+            $(".mob_keyboard").on("blur",function(){
+                //$("#formpage_container").height($("body").innerHeight());
+                //$("#formpage_container").css("overflow-y","hidden");
+                $(".formpage_container").css('padding-bottom','0');
+            });
+            $('#requested_trip_phone_no').on('focus', function() {
+                //$('#requested_trip_phone_no').scrollTop = 100;
+                $(this).attr('type', 'number');
+            });
+      }
+}
+function showAdhesionBanner(){
+             var mobAdUnit = $(".mob_bottom_ads");
+             var mobAdClose = $(".mob_bottom_ads_close");
+             var plusIcon = $(".kc_fab_wrapper");
+             mobAdUnit.addClass('mob_bottom_ads_show');
+             mobAdClose.addClass('mob_bottom_ads_show');
+             setTimeout(function(){
+               mobAdUnit.removeClass('mob_bottom_ads_show');  
+               plusIcon.addClass('hide');
+               setTimeout(function(){
+                 mobAdClose.removeClass('mob_bottom_ads_show');
+               },3000)
+               if(mobAdUnit[0]){
+                 setTimeout(function(){
+                   mobAdUnit.addClass('mob_bottom_ads_show');
+                   plusIcon.removeClass('hide');
+                 },23000)
+               }
+             },3000);
+             $("#mob_bottom_ads_close").click(function(){
+               mobAdUnit.addClass('mob_bottom_ads_show');
+               plusIcon.removeClass('hide');
+             })
+} 
+if(typeof(is_singlepage) !='undefined' && is_singlepage){
+      $( window ).load(function() {
+                        var h2_count = $(".blog-excerpt h2").length;
+                        var h3_count = $(".blog-excerpt h3").length;
+                        if(h2_count > h3_count && h2_count>9){
+                          get_h_tag = h2_count;
+                          h_tag_name = "h2";
+                        }
+                        else if(h3_count > h2_count && h3_count>9){
+                          get_h_tag = h3_count;
+                          h_tag_name = "h3";
+                        }
+                        else{
+                          get_h_tag='';
+                          h_tag_name='';
+                        }
+                        if(typeof(text_requestquotes_form_title)!='undefined' && typeof(text_requestquotes_form_cta)!='undefined' && text_requestquotes_form_title!=''){
+                              var request_trip_text =text_requestquotes_form_title;
+                              var request_trip_cta_text =text_requestquotes_form_cta;
+                              var deal_text =text_deals_form_title;
+                              var deal_cta_text =text_deals_form_cta;
+                              var guide_text =text_guide_form_title;
+                              var guide_cta_text =text_guide_form_cta;
+                          }else{
+                              var request_trip_text ="Get Custom-Made Quotes From Multiple Agents";
+                              var request_trip_cta_text ="Get Custom Quotes";
+                              var deal_text ="Get Best Deals for travel packages in your inbox";
+                              var deal_cta_text ="Get Travel Deals";
+                              var guide_text ="Get custom travel guide prepared by travel experts";
+                              var guide_cta_text ="Get Travel Guide";
+                        }
+                        /*if(typeof(is_mobile) !='undefined' && is_mobile){
+                            var ads_script= "";                            
+                            var ads_scriptRec= "";                            
+                            var ads_scriptTop= "";
+                              if(get_h_tag!=''){
+                                  var count_p = get_h_tag ;
+                                  var set_p_countm1 = count_p/3 ;
+                                  var set_p_countm1 = Math.round(set_p_countm1);
+                                  var set_p_countm2 = count_p/1.9 ;
+                                  var set_p_countm2 = Math.round(set_p_countm2);
+                                  var set_p_countm3 = count_p/1.3 ;
+                                  var set_p_countm3 = Math.round(set_p_countm3);
+                                  var h3_tag = $(".blog-excerpt "+h_tag_name+":nth-of-type("+set_p_countm1+")");
+                                  var h3_tagRec = $(".blog-excerpt "+h_tag_name+":nth-of-type("+set_p_countm2+")");
+                                  if((check_is_ads || is_MS_Carousel_v1 || is_MS_Carousel_v2 || is_MS_Carousel_v3 || is_MS_Carousel_v4 || is_MS_Carousel_v5) && h3_tag[0]){
+                                    var newDiv = document.createElement('div');
+                                    newDiv.innerHTML = ads_script;    
+                                    $(newDiv).insertBefore(h3_tag[0],$(newDiv))
+                                  }
+                              }                              
+                        }*/
+                          $('.sliderImgPnl').on('click', function(e){
+                              document.dispatchEvent(new CustomEvent("update-admin-comments",{detail:{adminComment: '#blog_banner#', removeComment: false}}));
+                              document.dispatchEvent(new CustomEvent("update-admin-comments-open",{detail:{formPopupOen: true}}));
+                              var ul = $(this).closest('.slides'); 
+                              if(ul.find('li').length - 1 != ul.find($(this).parent().parent()).index()){
+                                e.preventDefault();
+                                           $(this).find('a').attr('href',''); 
+                                           $('#sticky-sidebar').css('display','block');
+                                           $("#formpage_container").removeClass('hide');//remove old form from ds
+                                           $("#sticky-sidebar-bsf").addClass('formpage_container_popup');
+                                           $('.kc_fab_wrapper').removeClass('bg-opacity');                  
+                                           $("body, html").addClass('body-scroll-remove');   
+                                           history.pushState(null, "sticky-sidebar-bsf", '#sticky-sidebar-bsf');
+                                           $('.kc_fab_wrapper').css('display','none');
+                                           if(!is_mobile){
+                                             $('.form-popup-close').css('display','block');
+                                           }
+                                           //_gaq.push(['_trackEvent', "blog_banner","request_trip",window.location.href,0]);
+                                           $(".req-anchor").click();
+                              }else{
+                                var metaslider_href = $(this).find('a').attr('href');
+                                var metaslider_href  = metaslider_href.replace(/^http:\/\//i, 'https://');
+                                $(this).find('a').attr('href',metaslider_href);
+                              }
+                          });                        
+                        $('.form-popup-close .close,.close_icon').on('click',function(){
+                          document.dispatchEvent(new CustomEvent("update-admin-comments",{detail:{adminComment: '#blog_banner#', removeComment: true}}));
+                          document.dispatchEvent(new CustomEvent("update-admin-comments-close",{detail:{formPopupOen: false}}));
+                          var getDest = readCookie('cb_dt');
+                        if(getDest && getDest!=null){
+                          $('#destinations_id.slider-custom' ).val(getDest);
+                        }else{
+                          $('#destinations_id.slider-custom' ).val('');
+                        }
+                        $('#formpage_container').addClass('hide');//remove old form from ds
+                        $('.form-popup-close').hide();
+                        $("body, html").removeClass('body-scroll-remove'); 
+                        $('#sticky-sidebar-bsf.formpage_container_popup').removeClass('formpage_container_popup');
+                        $('#sticky-sidebar.formpage_container_popup').removeClass('formpage_container_popup');
+                            history.go(-1);
+                            return false;
+                        });                        
+      });
+}       
+ function readCookie(name) {
+            var nameEQ = name + "=";
+            var ca = document.cookie.split(';');
+            for(var i=0;i < ca.length;i++) {
+              var c = ca[i];
+              while (c.charAt(0)==' ') c = c.substring(1,c.length);
+              if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length,c.length);
+            }
+            return null;
+}
+function like_image_by_user(elemId){
+        var elemId = elemId || "get_like_imge_by_user";
+        var addScriptNode = document.getElementById(elemId);
+        var replacement = document.createElement('script');
+        replacement.innerHTML = addScriptNode.textContent;
+        document.body.appendChild(replacement);
+        addScriptNode.parentElement.removeChild(addScriptNode);
+}  
+if ( $( ".bs-slideshow-slide" ).length ) {
+        $(".get-tt-app").css("display", "block"); 
+}
+
+/*==============//start script for seoform===========*/
+
+/*==============//End script for seoform===========*/
+var executeWhenReachedPagePercentage = function(percentage, callback) {
+  if (typeof percentage !== 'number') {
+    console.error(
+      'First parameter must be a number, got',
+      typeof percentage,
+      'instead',
+    );
+  }
+
+  if (typeof callback !== 'function') {
+    console.error(
+      'Second parameter must be a function, got',
+      typeof callback,
+      'instead',
+    );
+  }
+
+  function getDocumentLength() {
+    var D = document;
+    return Math.max(
+        D.body.scrollHeight, D.documentElement.scrollHeight,
+        D.body.offsetHeight, D.documentElement.offsetHeight,
+        D.body.clientHeight, D.documentElement.clientHeight
+    )
+  }
+
+  function getWindowLength() {
+    return window.innerHeight || 
+      (document.documentElement || document.body).clientHeight;
+  }
+
+  function getScrollableLength() {
+    if (getDocumentLength() > getWindowLength()) {
+      return getDocumentLength() - getWindowLength();
+    } else {
+      return 0;
+    }
+  }
+
+  var scrollableLength = getScrollableLength();
+
+  window.addEventListener("resize", function(){
+    scrollableLength = getScrollableLength();
+  }, false)
+
+  function getCurrentScrolledLengthPosition() {
+   return window.pageYOffset || 
+     (document.documentElement || document.body.parentNode || document.body).scrollTop;
+  }
+
+  function getPercentageScrolled() {
+    if (scrollableLength == 0) {
+      return 100;
+    } else {
+      return getCurrentScrolledLengthPosition() / scrollableLength * 100;
+    }
+  }
+
+  var executeCallback = (function() {
+    var wasExecuted = false;
+    return function() {
+      if (!wasExecuted && getPercentageScrolled() > percentage) {
+        wasExecuted = true;
+        callback();
+      }
+    };
+  })();
+
+  if (getDocumentLength() == 0 ||
+    (getWindowLength()/getDocumentLength() * 100 >= percentage)) {
+    callback();
+  } else {
+    window.addEventListener('scroll', executeCallback, false);
+  }
+};

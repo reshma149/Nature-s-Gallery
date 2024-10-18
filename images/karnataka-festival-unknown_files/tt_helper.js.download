@@ -1,0 +1,135 @@
+var TT_HELPERS = {
+  jsAfterLoad: [],
+  jsFunctionsAfterload: [],
+  snippetsAfterLoad: [],
+  domCustomLoaded:false,
+  downloadJSAfterWindowLoad: function(JSpathObj, priority){
+    this.jsAfterLoad.push({jsPath: JSpathObj, priority: priority});
+  },
+  executeJSAfterWindowLoad: function(jsFunc, priority){
+    this.jsFunctionsAfterload.push({func: jsFunc, priority: priority});
+  },
+  downloadDependency: function(){
+    this.jsFunctionsAfterload.push({func: function(){downloadDG(ScriptDependency.head)}, priority: 2});
+  },
+  attachSnippetAfterLoad: function(snipper, priority){
+    this.snippetsAfterLoad.push({snippet: snipper, priority: priority});
+  },
+  downloadAllJS: function(){
+    var jsAfterLoad = TT_HELPERS.jsAfterLoad.sort(function(a, b){a.priority - b.priority});
+    for(var jsIndex = 0; jsIndex < jsAfterLoad.length; jsIndex++){
+      TT_HELPERS.downloadJS(jsAfterLoad[jsIndex].jsPath);
+    }
+    var jsAfterLoad = TT_HELPERS.jsFunctionsAfterload.sort(function(a, b){a.priority - b.priority});
+    for(var jsIndex = 0; jsIndex < jsAfterLoad.length; jsIndex++){
+      jsAfterLoad[jsIndex].func();
+    }
+    var jsAfterLoad = TT_HELPERS.snippetsAfterLoad.sort(function(a, b){a.priority - b.priority});
+    for(var jsIndex = 0; jsIndex < jsAfterLoad.length; jsIndex++){
+      document.body.appendChild(jsAfterLoad[jsIndex]);
+    }
+  },
+  downloadJS: function (JSpathObj){
+    var element = document.createElement("script");
+    element.src = JSpathObj.jsPath;
+    document.body.appendChild(element);
+    //start polling
+    var interval = window.setInterval(function(){
+      if(window[JSpathObj.variableToPoll]){
+        clearInterval(interval);
+        JSpathObj.callback();
+      }
+    }, 1000);
+  },
+  downloadCSSAfterWindowLoad: function(){
+    var addStylesNode = document.getElementById("belowfold_common");
+    var replacement = document.createElement("div");
+    replacement.innerHTML = addStylesNode.textContent;
+    document.body.appendChild(replacement);
+    addStylesNode.parentElement.removeChild(addStylesNode);
+  }
+};
+
+var ScriptDependency = {
+  head: null,
+  nodePointers: {},
+  initParent: function(scriptPath){
+    ScriptDependency.head = new ScriptNode(scriptPath);
+    ScriptDependency.nodePointers[scriptPath] = ScriptDependency.head;
+  },
+  addDependency: function(scriptPath, parentPath){
+    var scriptNode = new ScriptNode(scriptPath);
+    var parentNode = ScriptDependency.findNode(parentPath);
+    parentNode.addDecendent(scriptNode);
+    ScriptDependency.nodePointers[scriptPath] = scriptNode;
+  },
+  findNode: function(scriptPath){
+    if(scriptPath){
+      return ScriptDependency.nodePointers[scriptPath];
+    }
+    return ScriptDependency.nodePointers[ScriptDependency.head.script];
+  }
+};
+
+function downloadDG(head){
+ 
+  // download head
+  //--------------------------------
+  var script = document.createElement("script");
+  script.type = "text\/javascript";
+  script.src = head.script;
+  script.onload = function(){
+    for(var childIndex = 0; childIndex < head.decendents.length; childIndex++){
+      downloadDG(head.decendents[childIndex]);
+    }
+  };
+  document.body.appendChild(script);
+  //--------------------------------
+}
+
+function ScriptNode(scriptPath){
+  this.script = scriptPath;
+  this.decendents = [];
+}
+ScriptNode.prototype.addDecendent = function(scriptNode){
+  this.decendents.push(scriptNode);
+}
+
+function JSPath(jsPath, variableToPoll, callback){
+  this.jsPath = jsPath;
+  this.variableToPoll = variableToPoll;
+  this.callback = callback;
+}
+
+(function (func) {
+  var oldonload = window.onload;
+  if (typeof window.onload != 'function') {
+    window.onload = func;
+  } else {
+    window.onload = function() {
+      if (oldonload) {
+        oldonload();
+      }
+      func();
+    }
+  }
+  jQuery(document).ready(function(){
+    jQuery('.fl_section_wrap-inner .fl_list').each(function(e){
+      // Hide all list items except the first 10
+      jQuery(this).find('li').slice(10).hide();
+    });
+    jQuery('.fl_show_more').on('click',function(){
+          var $this = jQuery(this);
+          var target_class = $this.attr('id');
+          var find_in = "."+target_class+" .fl_list";
+          var $listItems = jQuery(find_in).find('li');
+          if ($this.hasClass('show-less')) {
+            $listItems.slice(10).hide();
+            $this.removeClass('show-less').text('Show More');
+        } else {
+            $listItems.show();
+            $this.addClass('show-less').text('Show Less');
+        }
+    });
+  });
+})(TT_HELPERS.downloadAllJS);

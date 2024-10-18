@@ -1,0 +1,153 @@
+if (typeof _gaq == 'undefined') {
+      //**********************************************Start Google Analytics******************************
+        var _gaq = _gaq || [];
+        _gaq.push(['_setAccount', 'UA-15374527-4']);
+        _gaq.push(['_trackPageview']);
+        //setTimeout("_gaq.push(['_trackEvent', '10_seconds', 'read'])",10000);
+
+        (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+        })(); 
+      //**********************************************End Google Analytics***********************************
+}
+        var is_mobile = false;
+        var cache_ajax = true;
+        var myUserAgent = navigator.userAgent;
+        if(myUserAgent.indexOf('Android')>0 || myUserAgent.indexOf('webOS')>0 || myUserAgent.indexOf('iPhone')>0 || myUserAgent.indexOf('iPad')>0 || myUserAgent.indexOf('iPod')>0 || myUserAgent.indexOf('BlackBerry')>0 || myUserAgent.indexOf('IEMobile')>0 || myUserAgent.indexOf('Opera Mini')>0){
+          $('.share-whatsapp').show();
+          is_mobile = true;
+          cache_ajax = false;
+        }
+        else{   
+        }
+        var my_url = [location.protocol, '//', location.host, location.pathname].join('');
+        var d ;
+        d = new Date();
+        var my_randomtext = "";
+        var mycat = my_url.replace(blog_home_url,"");
+        var mylabel = d.getTime();
+        var myaction ;
+        var current_id;
+        var id_being_seen_down=0;
+        var time_start_idseeing = 0;
+        var time_end_idseeing=0;
+        var time_seen;
+
+        var blogpost_h2_id_down = [];
+
+        if(is_mobile){
+          mycat = "BlogMobTab_" + mycat;
+        }
+        else{
+          mycat = "Blog_" + mycat;
+        }
+        if(my_randomtext===""){
+                d = new Date();
+                var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+                for( var i=0; i < 6; i++ )
+                  my_randomtext += possible.charAt(Math.floor(Math.random() * possible.length));                      
+                  mylabel = mylabel +'_' + my_randomtext;
+        } 
+        $( document ).ready(function() {
+            /*if (typeof(_gaq) != 'undefined') {
+                  setTimeout("_gaq.push(['_trackEvent', '10_seconds', 'read'])",7000); 
+            }*/
+            if($(".h2_Waypoints_blogpage").length>0){
+                $(".h2_Waypoints_blogpage").waypoint(function(direction) { 
+                    d = new Date();
+
+                    if(direction==="up"){
+                      id_being_seen_down=0;
+                    }
+                    else if(direction==="down"){
+                      current_id = $(this).attr('id');
+
+                      if(id_being_seen_down===0){
+                        id_being_seen_down = current_id;
+                        time_start_idseeing = d.getTime();// he is going        
+                      }
+                      else if(id_being_seen_down === current_id){
+
+                      }
+                      else{
+
+                        time_end_idseeing = d.getTime();// he is going        
+                        time_seen = (time_end_idseeing - time_start_idseeing)/1000;
+                        time_seen = Math.round(time_seen); 
+
+                        if(typeof blogpost_h2_id_down[id_being_seen_down] === 'undefined'){
+                          blogpost_h2_id_down[id_being_seen_down] = 1;
+                        }
+                        else{
+                          blogpost_h2_id_down[id_being_seen_down] = blogpost_h2_id_down[id_being_seen_down] + 1;
+                      }
+
+                        myaction = 'ReadThrough_DownOnly_H2Id_'+ id_being_seen_down + '_ViewNum_'+ blogpost_h2_id_down[id_being_seen_down];
+                        //Start GA call only first scroll
+                        var splitFirstH2Count= id_being_seen_down.split("_");
+                        var getFirstH2Count=0;
+                        if(typeof splitFirstH2Count[0] != 'undefined'){
+                           var getFirstH2Count = splitFirstH2Count[0];
+                        }
+                        //if(getFirstH2Count==1){
+                            if (typeof _gaq === 'undefined') {
+                            }else{
+                              _gaq.push(['_trackEvent', mycat, myaction, mylabel,time_seen]);  
+                            }
+                        //}
+                        //End GA call only first scroll
+                        id_being_seen_down = current_id;
+                        time_start_idseeing = d.getTime();// he is going         
+                      }
+                    }
+
+                });
+            }
+            if (typeof(_gaq) != 'undefined') {
+                        $( "#gallery-1" ).click(function() {
+                        _gaq.push(['_trackEvent', "Releted_post","Releted_post_thumbs",document.location.href,0]);            
+                        });
+                        $( ".sidebar_popular" ).click(function() {
+                        _gaq.push(['_trackEvent', "Popular_post","Popular_post_thumbs",document.location.href,0]);            
+                        });
+                        $( ".shareicon-facebook" ).click(function() {
+                          _gaq.push(['_trackEvent', " Social_icon","facebook_share_top",document.location.href,0]);            
+                        }); 
+                        $( ".shareicon-twitter" ).click(function() {
+                          _gaq.push(['_trackEvent', " Social_icon","twitter_share_top",document.location.href,0]);            
+                        });
+                        $( ".shareicon-google" ).click(function() {
+                          _gaq.push(['_trackEvent', " Social_icon","google_share_top",document.location.href,0]);            
+                        }); 
+                        $( ".shareicon-pinterest" ).click(function() {
+                          _gaq.push(['_trackEvent', " Social_icon","pinterest_share_top",document.location.href,0]);            
+                        });               
+                        $( ".wfb-icon" ).click(function() {
+                          _gaq.push(['_trackEvent', " Social_icon","facebook_share_image",document.location.href,0]);            
+                        }); 
+                        $( ".wtwtr-icon" ).click(function() {
+                          _gaq.push(['_trackEvent', " Social_icon","twitter_share_image",document.location.href,0]);            
+                        });
+                        $( ".wgplus-icon" ).click(function() {
+                          _gaq.push(['_trackEvent', " Social_icon","google_share_image",document.location.href,0]);            
+                        }); 
+                        $( ".wpin-icon" ).click(function() {
+                          _gaq.push(['_trackEvent', " Social_icon","pinterest_share_image",document.location.href,0]);            
+                        });
+                         $( ".fb-icon" ).click(function() {
+                          _gaq.push(['_trackEvent', " Social_icon","facebook_page",document.location.href,0]);            
+                         }); 
+                         $( ".pin-icon" ).click(function() {
+                          _gaq.push(['_trackEvent', " Social_icon","pinterest_page",document.location.href,0]);            
+                         });
+                         $( ".gplus-icon" ).click(function() {
+                          _gaq.push(['_trackEvent', " Social_icon","googleplus_page",document.location.href,0]);            
+                         });
+                          $( ".twtr-icon" ).click(function() {
+                          _gaq.push(['_trackEvent', " Social_icon","twitter_page",document.location.href,0]);            
+                         });              
+
+            }
+        });

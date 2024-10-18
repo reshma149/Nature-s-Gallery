@@ -1,0 +1,422 @@
+function getCookie(c_name) {
+  var pluses = /\+/g;
+  var c_value = document.cookie;
+  var c_start = c_value.indexOf(" " + c_name + "=");
+  if (c_start == -1) {
+    c_start = c_value.indexOf(c_name + "=");
+  }
+  if (c_start == -1) {
+    c_value = null;
+  } else {
+    c_start = c_value.indexOf("=", c_start) + 1;
+    var c_end = c_value.indexOf(";", c_start);
+    if (c_end == -1) {
+      c_end = c_value.length;
+    }
+     c_value = decodeURIComponent(c_value.substring(c_start, c_end).replace(pluses, ' '));
+  }
+  return c_value;
+}
+var getDest = getCookie('cb_dt');
+var to_destination='';
+var limit=10;
+var postTitle = '';
+var offset=0;
+var package_type='seo';
+var p_search='';
+var category='tour';
+var destination_type='';
+var symbolIN = '₹ ';
+var carouselHeading = 'Best-Selling Packages from TravelTriangle';
+if(getDest && getDest !=null && getDest !=""){
+    var to_destination=getDest;
+    carouselHeading = `<span class="toCapitalize">${getDest}</span> Holiday Packages`;
+}
+if(disqus_title){
+ postTitle=disqus_title; 
+ postTitleLow = postTitle.toLowerCase();
+ var matchesHon = postTitleLow.match( /honeymoon|romantic|couple/g );
+ var matchesIndia = postTitleLow.match( /india/g );
+ var matchesInternational = postTitleLow.match( /international/g );
+ if(matchesHon){
+    category='honeymoon';    
+ }
+ if(matchesIndia){
+    destination_type='india';
+ }
+ if(matchesInternational){
+    destination_type='international';
+ }
+ if(matchesHon && getDest && getDest !=null && getDest !=""){
+    carouselHeading = `<span class="toCapitalize">${getDest}</span> Honeymoon Packages`;
+ }
+ var destiNationFlag = false;
+ if(getDest =="" || getDest == null){
+    destiNationFlag = true;
+ }
+}
+var totalPackageCount =0;
+var pSearchStr = JSON.stringify({category : [category],price_ranges:["0-15_000"]});
+if(destination_type && destination_type.length>2){
+    if(destination_type == 'international')
+    {
+       var pSearchStr = JSON.stringify({category : [category],destination_type :[destination_type]});
+    } else {
+        var pSearchStr = JSON.stringify({category : [category],destination_type :[destination_type],price_ranges:["0-15_000"]});
+    }
+}
+var custome_url = window.location.href;
+var dataReq  = {
+        "package_type": package_type,
+        "limit": limit,
+        "offset": offset,
+        "p_search":pSearchStr
+        };
+if(to_destination && to_destination.length>2){
+var dataReq  = {
+        "package_type": package_type,
+        "to_destination": to_destination,
+        "limit": limit,
+        "offset": offset,
+        "p_search":pSearchStr
+        };
+}
+$.ajax({
+        type: "GET",
+        url: "https://"+window.location.hostname+"/browsing/v1/packages",
+        contentType: "application/json",
+        dataType: "json",
+        data:dataReq,
+        headers: {
+                'X-CLIENT-API-TOKEN': '93f67dbdacf3906955b5c529bb692fb11ac13dc3015c87f25c22fae51a5d79290841127492e312f2'
+        },
+        success: function(result) {
+            if(result.success){
+              if(!is_mobile_blog){
+                if(result.data.packages.length>0){
+                var packages_array = packageLogic(result.data.packages);    
+                  
+                htmlContent = renderPackageCarousel(packages_array);
+                document.querySelector('#package_carousel_thumb').innerHTML = htmlContent;
+                    $('.carousel-slider').flexslider({
+                        animation: "slide",
+                        animationLoop: true,
+                        itemWidth: '333px',
+                        pauseOnHover: true,
+                        itemMargin: '5px'
+                    });
+                    $('.sticky-filler-ui').flexslider({
+                        animation: "slide",
+                        animationLoop: true,
+                        itemWidth: '333px',
+                        pauseOnHover: true,
+                        itemMargin: '5px'
+                    });                    
+                   window.removeEventListener('scroll', fixPackageCarouselToTop);
+                   window.addEventListener('scroll', fixPackageCarouselToTop);
+                   $(".customzie-gtm-btn").click(function(){
+                        openForm(this.getAttribute("dest-data"));
+                   }); 
+                    $("#form-popup-close-bsf").click(function(){
+                       closeFormPopup();
+                   });   
+                }else{
+                    carouselHeading = 'Best-Selling Packages from TravelTriangle';
+                    callbackDefaultPackage();
+                }
+              }else{
+                    /*if(result.data.total_entries){
+                      totalPackageCount=result.data.total_entries;
+                      var tourSpan = document.querySelector('.tour-lnk + span');
+                      if(tourSpan && totalPackageCount){
+                        tourSpan.classList.add('show');
+                        tourSpan.innerHTML = "(" + totalPackageCount + "+)"
+                      }else{
+                        tourSpan.classList.add('hide');
+                      }
+
+                    }else{
+                      var tourSpan = document.querySelector('.tour-lnk + span');
+                      tourSpan.parentNode.classList.add('hide');
+                    }*/
+                }
+            }           
+        }
+}).done(function(result) {});
+function renderPackageCarousel(data) {
+        if(data && data !=''){
+        return "<div class='carousel-ui'><div>" +
+            "       <div class='carousel-slider carousel flexslider'>" +
+            "           <p style='font-size: 16px;color: #3e3e3e;font-weight: 600;margin-bottom: 5px;margin-top:10px;'>" + carouselHeading + "</p>" +
+            "           <ul class='carousel-slider-ul slides'>" +
+            createList(data) +
+            "           </ul>" +
+            "       </div>" +
+            "       <div class='sticky-filler-ui sticky-ui-carousl carousel  hide'>" +
+            "           <ul class='slides'>" +
+            createStickyList(data) +
+            "</ul>" +
+            "</div>" +
+            "</div></div>";
+        }
+    }
+    function createList(data) {
+        var pList = [], packageArr, i;        
+        for (i = 0; i < data.length; i++) {
+            pList.push(liTemplate(data[i].name, data[i].image_url,data[i].imagekit_url, Math.round(data[i].discount_percentage), data[i].discounted_price, data[i].price_total, data[i].days,data[i].nights, data[i].cities, data[i].inclusions, data[i].share_url+"&utm_campaign=blog_package_carousel&referer=blog_package_carousel",data[i].destinations))
+       }
+        return pList.join('');
+    }
+    function liTemplate(title, imgSrc,imgeKitSrc, discountOff, discountedP, price, days,nights, cityList, inclusionList, url,destList) {
+        return '<li class="col-xs-12 p0 slider-ui-li"><div class="sticky-ui-gtm col-xs-12 p0">' +
+            '       <div class="upper-sec-ui col-xs-12 p0 ">' +
+            '           <a href="' + url + '" class="col-xs-12 p0 ui-link" target="_blank">' +
+            '               <div class="image-ui col-xs-12 p0">' +
+            '                   <img src="' + (imgeKitSrc ? imgeKitSrc:imgSrc) +'?tr=w-400,h-250' + '" class="absolute-center" style="height:100%;width:100%;"/>' +
+            '                   <div class="layer-ui"></div>' +
+            '               </div>' +
+            '               <div class="price-comp-ui">' +
+            '                   <p class="dscount-off">' + discountOff + '% Off' + '</p>' +
+            '                   <p class="discounted-price-ui"' + (discountOff > 0 ? " hide":"") +'><span class="price-symbol">' + symbolIN + '</span>' + price + '</p>' +
+            '                   <p class="price-ui"><span class="price-symbol">' + symbolIN + '</span>' + discountedP + '</p>' +
+            '                   <p class="per-person-ui">per person</p>' +
+            '               </div>' +
+            '               <div class="details-ui">' +
+            '                   <button class="details-gtm">View Package</button>' +
+            '               </div>' +
+            '           </a>' +
+            '       </div>' +
+            '       <div class="ui-title-sec col-xs-12 p0">' +
+            '           <p class="title-ui col-xs-9 p0">' + title + '</p>' +
+            '           <p class="days-ui col-xs-3 p0">' + days + 'D & ' + nights + 'N'+ '</p>' +
+            '       </div>' +
+            '       <ul class="cities-ui col-xs-12 p0">' +
+            createCityList(cityList) +
+            '       </ul>' +
+            '       <ul class="inclusions-ui col-xs-12 p0">' +
+            createInclusionList(inclusionList) +
+            '       </ul>' +
+            '       <div class="customize-ui col-xs-12 p0">' +
+            '           <button class="customzie-gtm-btn sliderImgPnl" dest-data="'+(destList.length > 0 ? destList[0].name:"")+'">Customize & Get Quotes</button>' +
+            '       </div></div>' +
+            '</li>';
+    }
+    function createCityList(cityList) {
+        var list = [];
+        var uniqueCities = cityList.filter(function(item, pos){
+            return cityList.indexOf(item)== pos; 
+        });
+        for (var i = 0; i < uniqueCities.length; i++) {
+            if (i === (uniqueCities.length - 1)) {
+                list.push("<li class='last-icon'>" + uniqueCities[i] + "</li>");
+            } else {
+                list.push("<li class='gen-sprite right-icon'>" + uniqueCities[i] + "</li>");
+            }
+        }
+        return list.join('');
+    }
+    function createInclusionList(incluList) {
+        var list = [];
+        for (var i = 0; i < incluList.length; i++) {
+            list.push("<li class='" + (incluList[i].available ? "" : " hide") + "'><div class='li-inclusion " + incluList[i].key + "'></div><p class='inclu-span'>" + incluList[i].text + "</p></li>");
+        }
+        return list.join('');
+    }
+    function liStickyTemplate(title, discountedP, price, imgSrc,imgeKitSrc, url, days, nights,discountOff) {
+        return '<li class="col-xs-12 p0 slider-stic">' +
+            '       <div class="sticky-carousel-ui col-xs-12 p0" style="background-image: url(' + (imgeKitSrc ? imgeKitSrc:imgSrc)+'?tr=w-400,h-250' + ')">' +
+            '<a href="' + url + '" style="margin: 0;height:100%;width:100%;" class="col-xs-12 p0" target="_blank">' +
+            '   <div class="bg-hover">' +
+            '       <div class="sticky-title col-xs-8 p0">' +
+            '          <p>' + days + 'D/' + nights + 'N - '+ text_truncate(title,45)  + '</p>' +
+            '       </div>' +
+            '       <div class="sticky-price-ui col-xs-4 p0">' +
+            '          <p class="dis-ui"'+ (discountOff > 0 ? " hide":"") + '><span class="price-symbol">' + symbolIN + '</span>' + price + '</p>' +
+            '          <p class="start-ui"><span class="price-symbol">' + symbolIN + '</span>' +  discountedP + '</p>' +
+            '          <p class="per-ui"> per person </p>' +
+            '       </div>' +
+            '       </div>' +
+            '</a>' +
+            '<div class="sticky-hover-ui details-ui"><a href="' + url + '" target="_blank"><button class="sticky-btn">View Package</button></a></div>' +
+            '</div>' +
+            '</li>';
+    }
+    function createStickyList(data) {
+        var pList = [], packageArr, i;
+        for (i = 0; i < data.length; i++) {
+            pList.push(liStickyTemplate(data[i].name, data[i].discounted_price, data[i].price_total, data[i].image_url,data[i].imagekit_url, data[i].share_url+"&utm_campaign=blog_package_carousel&referer=blog_package_carousel", data[i].days, data[i].nights, Math.round(data[i].discount_percentage)));
+        }
+        return pList.join('');
+    }
+
+    function onlyUnique(arrayVal) { 
+        var filteredArray = arrayVal.filter(function(item, pos){
+          return arrayVal.indexOf(item)== pos; 
+        });    
+    }
+    function fixPackageCarouselToTop() {
+        if($("#sticky-sidebar-new").length>0){
+            var stickyHeaderTop = $('#sticky-sidebar-new').offset().top - parseInt($("#sticky-hdr").css('height'));
+        }else{
+            var stickyHeaderTop = $('#sticky-sidebar').offset().top - parseInt($("#sticky-hdr").css('height'));
+        }
+        var sticktC = document.querySelector('.carousel-slider'),
+            stickyBar = document.querySelector('#sticky-sidebar'),
+            packageCarousel = document.querySelector('.sticky-filler-ui');
+        if(sticktC){
+            if( $(window).scrollTop() > stickyHeaderTop ) {
+                    if(sticktC){
+                        // sticktC.classList.add('hide');
+                        }
+                if(packageCarousel){
+                    packageCarousel.classList.remove('hide');
+                    $('.sticky-filler-ui').flexslider();
+                }
+    
+                $(window).trigger('resize');                    
+                } else {
+                    if(sticktC){
+                    sticktC.classList.remove('hide');
+                }
+                if(packageCarousel){
+                    packageCarousel.classList.add('hide');
+                }
+                }
+        
+        }
+    }
+    function openForm(destdData) {
+              document.dispatchEvent(new CustomEvent("update-admin-comments",{detail:{adminComment: '#blog_banner#', removeComment: false}}));
+              document.dispatchEvent(new CustomEvent("update-admin-comments-open",{detail:{formPopupOen: true}}));
+                if(destdData){$('#destinations_id.slider-custom' ).val(destdData);}              
+                $("#formpage_container").removeClass('hide');
+                $('#sticky-sidebar-bsf').css('display','block');
+                $("#sticky-sidebar-bsf").addClass('formpage_container_popup');
+                $('#form-popup-close-bsf').css('display','block');                  
+                $("body, html").addClass('body-scroll-remove');   
+                history.pushState(null, "sticky-sidebar", '#sticky-sidebar-bsf');
+               
+    } 
+    function closeFormPopup(){
+                       document.dispatchEvent(new CustomEvent("update-admin-comments",{detail:{adminComment: '#blog_banner#', removeComment: true}}));
+                          document.dispatchEvent(new CustomEvent("update-admin-comments-close",{detail:{formPopupOen: false}}));
+                          var getDest = readCookie('cb_dt');
+                        if(getDest && getDest!=null){
+                          $('#destinations_id.slider-custom' ).val(getDest);
+                        }else{
+                          $('#destinations_id.slider-custom' ).val('');
+                        }
+                        $('#formpage_container').addClass('hide');//remove old form from ds
+                        $('form-popup-close-bsf').hide();
+                        $('#sticky-sidebar-bsf').removeClass('formpage_container_popup');
+                        $("body, html").removeClass('body-scroll-remove'); 
+                        $('#sticky-sidebar-bsf.formpage_container_popup').removeClass('formpage_container_popup');
+                            history.go(-1);
+                            return false;
+                      
+    }
+     function openFormMob() {
+              document.dispatchEvent(new CustomEvent("update-admin-comments",{detail:{adminComment: '#blog_banner#', removeComment: false}}));
+              document.dispatchEvent(new CustomEvent("update-admin-comments-open",{detail:{formPopupOen: true}}));
+                $("#formpage_container").removeClass('hide');             
+                $('#sticky-sidebar').css('display','block');
+                $("#sticky-sidebar").addClass('formpage_container_popup');
+                $('.kc_fab_wrapper').removeClass('bg-opacity');                  
+                $("body, html").addClass('body-scroll-remove');   
+                history.pushState(null, "sticky-sidebar", '#sticky-sidebar');
+                $('.kc_fab_wrapper').css('display','none');
+                $(".req-anchor").click();
+        }
+    function callbackDefaultPackage(){
+        $.ajax({
+        type: "GET",
+        url: "https://"+window.location.hostname+"/browsing/v1/packages",
+        contentType: "application/json",
+        dataType: "json",
+        data:{
+        "package_type": package_type,
+        "limit": limit,
+        "offset": offset,
+        "p_search":pSearchStr
+        },
+        headers: {
+                'X-CLIENT-API-TOKEN': '93f67dbdacf3906955b5c529bb692fb11ac13dc3015c87f25c22fae51a5d79290841127492e312f2'
+        },
+        success: function(result) {
+            if(result.success){
+                var packages_array = packageLogic(result.data.packages);    
+                
+                htmlContent = renderPackageCarousel(packages_array);
+                document.querySelector('#package_carousel_thumb').innerHTML = htmlContent;
+                    $('.carousel-slider').flexslider({
+                        animation: "slide",
+                        animationLoop: true,
+                        itemWidth: '333px',
+                        pauseOnHover: true,
+                        itemMargin: '5px'
+                    });
+                    $('.sticky-filler-ui').flexslider({
+                        animation: "slide",
+                        animationLoop: true,
+                        itemWidth: '333px',
+                        pauseOnHover: true,
+                        itemMargin: '5px'
+                    });                    
+                   window.removeEventListener('scroll', fixPackageCarouselToTop);
+                   window.addEventListener('scroll', fixPackageCarouselToTop);
+                   $(".customzie-gtm-btn").click(function(){
+                        openForm(this.getAttribute("dest-data"));
+                   }); 
+                     $("#form-popup-close-bsf").click(function(){
+                       closeFormPopup();
+                   }); 
+            }           
+          }
+        }).done(function(result) {});
+    }
+    text_truncate = function(str, length, ending) {
+        if (length == null) {
+          length = 100;
+        }
+        if (ending == null) {
+          ending = '...';
+        }
+        if (str.length > length) {
+          return str.substring(0, length - ending.length) + ending;
+        } else {
+          return str;
+        }
+    }
+
+if(is_mobile_blog){    
+    if(dataObj=[{title:"Share",url:"",className:"share-link",count:0},{title:"Explore Packages",url:"https://"+window.location.hostname+"/tour-packages?referer=blog_ql_packages",className:"tour-lnk",count:0},{title:"Explore Hotels",url:"https://"+window.location.hostname+"/hotels/?referer=blog_ql_hotels",className:"india-tour-lnk",count:0},{title:"Get Free Quotes",url:"",className:"get-free-quotes",count:0},{title:""!=getDest&&null!=getDest?getDest+" Blogs":"Popular Blogs",url:"https://"+window.location.hostname+"/blog/"+(""!=getDest&&null!=getDest?"?s=+"+getDest:""),className:"pop-blogs",count:0},{title:""!=getDest&&null!=getDest?getDest+" Travel Stories":"Travel Stories",url:"https://"+window.location.hostname+"/blog/"+(""!=getDest&&null!=getDest?"?s=Travelogue+"+getDest:"travelogues/"),className:"travel-logues",count:0}],referenceNode=document.querySelector(".post-item"),referenceNode){var newNode=document.createElement("div");newNode.className="quick-link row",newNode.innerHTML=createHTML(dataObj),referenceNode.parentNode.insertBefore(newNode,referenceNode),document.querySelector(".tour-lnk").classList.contains("hide")&&document.querySelector(".tour-lnk").parentNode.classList.add("hide");var socialLnk=document.querySelector(".share-link");socialLnk&&socialLnk.addEventListener("click",function(){var e=document.querySelector(".socialshare_box");e&&(e.setAttribute("style",""),e.classList.add("showSocial")),e.classList.remove("hideLayer"),socialLnk.closest(".quick-link").classList.add('hideQ'),socialLnk.closest(".quick-link").classList.contains("sticky-q-lnk")});var closeShare=document.querySelector(".social-close");closeShare&&closeShare.addEventListener("click",function(){var e=document.querySelector(".socialshare_box");e&&(e.setAttribute("style",""),e.classList.remove("showSocial")),e.classList.add("hideLayer"),document.querySelector('.quick-link').classList.remove('hideQ'),document.querySelector(".quick-link").classList.contains("sticky-q-lnk")&&e.setAttribute("style","top:0 !important")});var getQuotes=document.querySelector(".get-free-quotes");getQuotes&&getQuotes.addEventListener("click",function(){openFormMob()});var linkContainer=document.querySelector(".quick-link"),sticky=linkContainer.offsetTop;$(window).scroll(function(){linkContainer&&(window.pageYOffset>sticky?($("#teamKraftt_header").hide(),linkContainer.classList.add("sticky-q-lnk"),linkContainer.classList.remove("non-sticky")):($("#teamKraftt_header").show(),linkContainer.classList.remove("sticky-q-lnk"),linkContainer.classList.add("non-sticky")))})}function createHTML(e){for(var t=[],i=0;i<e.length;i++)t.push(createList(e[i].title,e[i].url,e[i].className,e[i].count));return styles()+"<ul>"+t.join("")+"</ul>"}function createList(e,t,i,o){return"<li class='iblock " + ((e!='' && e!==null) ? '' : 'hide') +"'><a class='common-link "+i+"'"+(""!==t?"href='"+t:"'")+"' target='_blank'>"+e+"</a></li>"}function styles(){return"<style>.hideLayer{transform: scale(0,1);}.quick-link .show{display:inline-block !important;opacity:1;}.quick-link::-webkit-scrollbar {display: none;}.quick-link{ z-index: 99;  font-size: 12px; background: rgb(255, 255, 255); box-shadow: rgb(153, 153, 153) 0px 0px 4px;overflow:auto;height:auto;font-weight: bold;}.quick-link a{display: inline-block; color: rgb(62, 62, 62); text-transform: capitalize;}.quick-link ul {list-style: none;padding: 0;white-space: nowrap;margin-bottom:5px;}li.iblock {display: inline-block;margin-top: 9px;border-right:1px solid rgb(208, 161, 161);padding-right:10px;margin-left:10px;}.share-link { padding-left: 40px;position:relative;}.get-free-quotes {border: 1px solid #fe5246 !important;padding: 5px 13px;color: #fe5246 !important;}.socialshare_box{transition: all 0.3s ease-in 0s;transform-origin: left;}.socialshare_box{display:none !important;}.showSocial{top: 56px !important;display:block !important;bottom: auto !important;padding: 7px 15px;}.hideQ{opacity:0;}.sticky-q-lnk{position: fixed;left: 20px;top:0;right: 0px;margin-right:0 !important;}li.iblock:last-child { border-right: medium none;}.share-link::before{content:'';left:10px;top:-3px;height:24px;width:25px;position:absolute;background-image:url(data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz48c3ZnIHdpZHRoPSIyNHB4IiBoZWlnaHQ9IjI0cHgiIHZpZXdCb3g9IjAgMCAyNCAyNCIgdmVyc2lvbj0iMS4xIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIj4gICAgICAgIDx0aXRsZT5JY29uL1NoYXJlL0JsYWNrPC90aXRsZT4gICAgPGRlc2M+Q3JlYXRlZCB3aXRoIFNrZXRjaC48L2Rlc2M+ICAgIDxnIGlkPSJJY29uL1NoYXJlL0JsYWNrIiBzdHJva2U9Im5vbmUiIHN0cm9rZS13aWR0aD0iMSIgZmlsbD0ibm9uZSIgZmlsbC1ydWxlPSJldmVub2RkIj4gICAgICAgIDxnPiAgICAgICAgICAgIDxnPiAgICAgICAgICAgICAgICA8cmVjdCBpZD0iUmVjdGFuZ2xlIiB4PSIwIiB5PSIwIiB3aWR0aD0iMjQiIGhlaWdodD0iMjQiPjwvcmVjdD4gICAgICAgICAgICAgICAgPGcgaWQ9Ikdyb3VwIiB0cmFuc2Zvcm09InRyYW5zbGF0ZSgyLjAwMDAwMCwgMi4wMDAwMDApIj4gICAgICAgICAgICAgICAgICAgIDxwYXRoIGQ9Ik03LjEwNDgzNTY5LDguMzIyNTgyMTYgTDEyLjg5NTE2NDMsNS40Mjc0MTc4NCBMNy4xMDQ4MzU2OSw4LjMyMjU4MjE2IEM3LjEwNDgzNTY5LDguMzIyNTgyMTYgNy4xMDQ4MzU2OSw4LjMyMjU4MjE2IDcuMTA0ODM1NjksOC4zMjI1ODIxNiBaIiBpZD0iQ29tYmluZWQtU2hhcGUiIHN0cm9rZT0iIzAwMDAwMCIgc3Ryb2tlLWxpbmVjYXA9InNxdWFyZSI+PC9wYXRoPiAgICAgICAgICAgICAgICAgICAgPHBhdGggZD0iTTEyLjg5NTE2NDMsMTQuNTcyNTgyMiBMNy4xMDQ4MzU2OSwxMS42Nzc0MTc4IEwxMi44OTUxNjQzLDE0LjU3MjU4MjIgQzEyLjg5NTE2NDMsMTQuNTcyNTgyMiAxMi44OTUxNjQzLDE0LjU3MjU4MjIgMTIuODk1MTY0MywxNC41NzI1ODIyIFoiIGlkPSJDb21iaW5lZC1TaGFwZSIgc3Ryb2tlPSIjMDAwMDAwIiBzdHJva2UtbGluZWNhcD0ic3F1YXJlIj48L3BhdGg+ICAgICAgICAgICAgICAgICAgICA8Y2lyY2xlIGlkPSJPdmFsIiBzdHJva2U9IiMwMDAwMDAiIGN4PSIzLjc1IiBjeT0iMTAiIHI9IjMuMjUiPjwvY2lyY2xlPiAgICAgICAgICAgICAgICAgICAgPGNpcmNsZSBpZD0iT3ZhbC1Db3B5IiBzdHJva2U9IiMzRTNFM0UiIGN4PSIxNi4yNSIgY3k9IjMuNzUiIHI9IjMuMjUiPjwvY2lyY2xlPiAgICAgICAgICAgICAgICAgICAgPGNpcmNsZSBpZD0iT3ZhbC1Db3B5IiBzdHJva2U9IiMwMDAwMDAiIGN4PSIxNi4yNSIgY3k9IjMuNzUiIHI9IjMuMjUiPjwvY2lyY2xlPiAgICAgICAgICAgICAgICAgICAgPGNpcmNsZSBpZD0iT3ZhbC1Db3B5LTIiIHN0cm9rZT0iIzAwMDAwMCIgY3g9IjE2LjI1IiBjeT0iMTYuMjUiIHI9IjMuMjUiPjwvY2lyY2xlPiAgICAgICAgICAgICAgICA8L2c+ICAgICAgICAgICAgPC9nPiAgICAgICAgPC9nPiAgICA8L2c+PC9zdmc+)!important;}</style>"}
+}else{
+    var sourcEle=document.querySelectorAll(".imagesource-link");if(0<sourcEle.length)for(var i=0;i<sourcEle.length;i++)"Image Source"===sourcEle[i].parentNode.textContent&&sourcEle[i].classList.add("customize-img-source");
+}
+function ucwords(str,force){
+  if(str && str!=null && str.length>2) { 
+  str=force ? str.toLowerCase() : str;  
+  return str.replace(/(\b)([a-zA-Z])/g,
+           function(firstLetter){
+              return   firstLetter.toUpperCase();
+           });
+  }else{
+    return "";
+  }
+}
+
+function packageLogic(packages_array)
+{
+   packages_array.sort(sortFunction);
+
+    function sortFunction(a, b) {
+        if (a['discounted_price'] === b['discounted_price']) {
+            return 0;
+        }
+        else {
+            return (a['discounted_price'] < b['discounted_price']) ? -1 : 1;
+        }
+    }    
+
+   return  packages_array;              
+}
